@@ -142,4 +142,47 @@ make ui               # Mở màn hình trận đấu
 
 ---
 
+## Tiến độ làm việc
+
+### Đã hoàn thành
+
+#### 1. Makefile cho Windows
+- Sửa đường dẫn Scripts/bin
+- Thêm uv venv support
+- Chạy được `make install`, `make doctor`
+
+#### 2. Gateway Defense (`agent/gateway.py`)
+| Feature | Implement |
+|---|---|
+| Rewrite deprecated tools | ✅ `slides.search` → `slides.query` |
+| Deny get_frame without lease | ✅ |
+| Deny writes to wrong learner | ✅ |
+
+#### 3. Prosecution (`eval/prosecute.py`)
+| Detector | Weight | Status |
+|---|---|---|
+| `enforcement_failure` | 10 | ✅ Có sẵn |
+| `protocol_misuse` | 6 | ✅ Đã implement |
+| Others | - | ⚠️ Stub |
+
+**Kết quả test:** Precision 1.0, Recall 0.118
+
+#### 4. UI Improvements
+- Ẩn overlays (reveal, integrity, K.O.)
+- PR đã tạo cho fix này
+
+### Kết quả Spar
+
+| Bot | YOU HP | Rookie HP | Defense |
+|---|---|---|---|
+| rookie | **100** | 23 | ✅ Hoàn hảo |
+
+### Cần làm tiếp
+
+1. **Implement thêm detectors** - để bắt thêm violations
+2. **Cải thiện deck** - viết lá bài tấn công mới
+3. **Implement guardrails** - kiểm tra câu trả lời
+
+---
+
 *Tài liệu này được tạo tự động từ README.md và các file markdown khác trong dự án.*
