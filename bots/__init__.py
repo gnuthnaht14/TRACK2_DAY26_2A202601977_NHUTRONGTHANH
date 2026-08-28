@@ -37,4 +37,4 @@ if any(os.path.abspath(p) == _HERE for p in sys.path if p):
         "See the note at the top of bots/__init__.py."
     )
 
-__all__ = ["rookie", "operator", "adversary"]
+__all__ = ["rookie", "operator", "adversary", "hoainam", "yennhi"]

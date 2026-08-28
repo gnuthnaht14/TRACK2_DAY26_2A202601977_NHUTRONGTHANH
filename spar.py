@@ -47,7 +47,7 @@ sys.path.insert(0, str(HERE))
 from kit.mcp.mutations import MutableStack, trigger_matches  # noqa: E402
 from kit.referee.rubric import DETERMINISTIC, family_of, weight_of  # noqa: E402
 
-BOTS = ("rookie", "operator", "adversary")
+BOTS = ("rookie", "operator", "adversary", "hoainam", "yennhi")
 ROLES = ("defender", "attacker", "prosecutor", "all")
 START_HP = 100
 CREDITS = 100

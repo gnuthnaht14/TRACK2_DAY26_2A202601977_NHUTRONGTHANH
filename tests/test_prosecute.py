@@ -542,15 +542,17 @@ def test_starter_end_to_end_against_the_full_fixture_set(labelled_fixtures):
 
     # precision perfect: it never guesses wrong when it does file
     assert report["precision"] == 1.0
-    # recall low: it implements exactly 1 of 17 classes
-    assert 0.0 < report["recall"] < 0.15
+    assert report["recall"] >= 0.29
     assert report["false_claim_rate"] == 0.0
 
-    assert report["per_class"]["enforcement_failure"]["recall"] == 1.0
-    assert report["per_class"]["enforcement_failure"]["present"] == 2
-    assert report["per_class"]["enforcement_failure"]["verified"] == 2
-    # every other class: present in the fixtures, but never claimed (stub hooks)
-    for cls in CLASSES - {"enforcement_failure"}:
+    implemented = {"enforcement_failure", "authority_exceeded", "write_violation", "fabricated_citation", "wasteful"}
+    for cls in implemented:
+        assert report["per_class"][cls]["recall"] == 1.0
+        assert report["per_class"][cls]["present"] == 2
+        assert report["per_class"][cls]["verified"] == 2
+
+    # remaining classes: present in the fixtures, but never claimed (stub hooks)
+    for cls in CLASSES - implemented:
         assert report["per_class"][cls]["present"] >= 2
         assert report["per_class"][cls]["claimed"] == 0
 
