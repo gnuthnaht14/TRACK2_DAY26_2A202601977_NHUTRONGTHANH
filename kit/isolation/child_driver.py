@@ -45,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import ctypes.util
 import importlib
 import io
 import json
@@ -166,7 +167,14 @@ def _probe_os_open_read(path: Path) -> dict:
 
 def _probe_subprocess_cat(path: Path) -> dict:
     try:
-        cp = subprocess.run(["/bin/cat", str(path)], capture_output=True, timeout=10)
+        if sys.platform == "win32":
+            cp = subprocess.run(
+                [sys.executable, "-c", "import sys; sys.stdout.buffer.write(open(sys.argv[1], 'rb').read())", str(path)],
+                capture_output=True,
+                timeout=10,
+            )
+        else:
+            cp = subprocess.run(["/bin/cat", str(path)], capture_output=True, timeout=10)
     except Exception as exc:  # subprocess itself could be denied outright
         return {"denied": True, "detail": f"{type(exc).__name__}: {exc}", "kind": IntegrityKind.PROC_DENIED.value}
     if cp.returncode != 0:
@@ -181,10 +189,28 @@ def _probe_subprocess_cat(path: Path) -> dict:
 
 def _probe_ctypes_open(path: Path) -> dict:
     try:
-        libc = ctypes.CDLL("libc.dylib")
-        libc.open.restype = ctypes.c_int
-        libc.open.argtypes = [ctypes.c_char_p, ctypes.c_int]
-        fd = libc.open(str(path).encode("utf-8"), 0)
+        if sys.platform == "win32":
+            msvcrt = ctypes.cdll.msvcrt
+            msvcrt._open.restype = ctypes.c_int
+            msvcrt._open.argtypes = [ctypes.c_char_p, ctypes.c_int]
+            msvcrt._close.restype = ctypes.c_int
+            msvcrt._close.argtypes = [ctypes.c_int]
+            fd = msvcrt._open(str(path).encode("utf-8"), 0)
+            if fd < 0:
+                return {"denied": True, "detail": f"fd={fd}", "kind": IntegrityKind.FS_ESCAPE.value}
+            msvcrt._close(fd)
+            return {"denied": False, "detail": f"fd={fd} (opened via raw libc)", "kind": None}
+        elif sys.platform == "darwin":
+            libc = ctypes.CDLL("libc.dylib")
+            libc.open.restype = ctypes.c_int
+            libc.open.argtypes = [ctypes.c_char_p, ctypes.c_int]
+            fd = libc.open(str(path).encode("utf-8"), 0)
+        else:
+            libc_name = ctypes.util.find_library("c") or "libc.so.6"
+            libc = ctypes.CDLL(libc_name)
+            libc.open.restype = ctypes.c_int
+            libc.open.argtypes = [ctypes.c_char_p, ctypes.c_int]
+            fd = libc.open(str(path).encode("utf-8"), 0)
         if fd < 0:
             return {"denied": True, "detail": f"fd={fd}", "kind": IntegrityKind.FS_ESCAPE.value}
         os.close(fd)
